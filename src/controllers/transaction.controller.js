@@ -141,7 +141,7 @@ async function createTransaction(req,res) {
             toAccount: toUserAccount._id,
             amount,
             idempotencyKey: idempotencyKey,
-            status: "PANDING"
+            status: "PENDING"
         }], {session}))[ 0 ]
 
         
