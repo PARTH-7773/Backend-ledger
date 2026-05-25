@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-const { create } = require("./transaction.model");
 
 const tokenBlackListSchema = new mongoose.Schema({
     token: {

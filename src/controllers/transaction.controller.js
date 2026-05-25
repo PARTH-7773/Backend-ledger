@@ -1,20 +1,19 @@
+const mongoose = require("mongoose");
+const UUID = require("uuid") 
+
+
 const transactionModel = require("../models/transaction.model");
 const accountModel = require("../models/account.model");
 const ledgerModel = require("../models/ledger.model");
 const email = require("../services/email.service");
-const mongoose = require("mongoose");
-const UUID = require("uuid")
 
 /**
  * Generate idempotency Key with UUID package
  */
-
 let key ;
 function generateIdempotencyKey() {
     key = UUID.v7()
 }
-// console.log(key);
-
 
 /**
  * - Create a new transaction
@@ -31,8 +30,8 @@ function generateIdempotencyKey() {
       * 10.Send email notification 
  */
 
+generateIdempotencyKey()
 async function createTransaction(req,res) {
-    generateIdempotencyKey()
     const {fromAccount, toAccount, amount, idempotencyKey= key} = req.body;
     
     /**
@@ -107,7 +106,7 @@ async function createTransaction(req,res) {
       * 3.Check account status
      */
 
-    if (!fromAccount.status === "ACTIVE" || !toAccount.status === "ACTIVE") {
+    if (fromUserAccount.status !== "ACTIVE" || toUserAccount.status !== "ACTIVE") {
         return res.status(400).json({
             message: "Both fromAccount and toAccount must be ACTIVE to process transaction"
         })
@@ -136,21 +135,22 @@ async function createTransaction(req,res) {
         const session = await mongoose.startSession()
         session.startTransaction()
 
-        transaction = (await transactionModel.create([{
+        transaction = await transactionModel.create({
             fromAccount: fromUserAccount._id,
             toAccount: toUserAccount._id,
             amount,
             idempotencyKey: idempotencyKey,
             status: "PENDING"
-        }], {session}))[ 0 ]
+        })
 
-        
+        console.log(transaction)
         const debitLedgerEntry = await ledgerModel.create([{
             account: fromAccount,
             amount :amount,
             transaction:transaction._id,
             type:"DEBIT"
         }],{ session })
+        console.log("hello")
 
         await (()=>{
             return new Promise((resolve)=> setTimeout(resolve, 15 * 1000))
@@ -289,8 +289,6 @@ async function createInitialFundsTrasaction(req, res) {
 
     await session.commitTransaction()
     await session.endSession()
-
-    
 
     return res.status(201).json({
         message: "Initial funds transaction completed successfully",

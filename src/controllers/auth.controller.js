@@ -52,7 +52,7 @@ async function userLoginController(req,res) {
 
     const user = await userModel.findOne({ email }).select("+password");
     // console.log(user)
-    // console.log(user.password)
+    // console.log(user.password)       
 
     if (!user) {
         return res.status(401).json({
@@ -82,6 +82,8 @@ async function userLoginController(req,res) {
     })
 
 }  
+
+
 /**
  * user logout controller
  * POST /api/auth/logout
@@ -95,15 +97,10 @@ async function userLogoutController(req,res) {
             message: "User logout successfully"
         })
     }
-
     res.clearCookie("token");
-
- 
     const blacklistToken = await tokenBlackListModel.create({
         token: token
     })
-   
-    
     res.status(200).json({
             message: "User logout successfully"
     })
